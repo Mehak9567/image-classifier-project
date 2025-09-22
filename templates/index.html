@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Classifier</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f4f6f8;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    #previewImage {
+      margin-top: 20px;
+      max-width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    #results {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .prediction {
+      font-size: 18px;
+      margin: 8px 0;
+    }
+
+    .top {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2c7a7b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload an Image</h1>
+  
+  <input type="file" id="fileInput" accept="image/*" onchange="showPreview(event)">
+  <button onclick="uploadImage()">Classify</button>
+
+  <!-- Image Preview -->
+  <img id="previewImage" src="" alt="Image Preview">
+
+  <div id="results"></div>
+
+  <script>
+    function showPreview(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById("previewImage");
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadImage() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files.length) return alert("Please select an image!");
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      // clear results
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+
+      if (data.error) {
+        resultsDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        return;
+      }
+
+      // Show top prediction
+      const top = data[0];
+      resultsDiv.innerHTML += `<div class="prediction top">✅ Top Prediction: ${top.label} (${(top.score*100).toFixed(2)}%)</div>`;
+
+      // Show other predictions
+      for (let i = 1; i < data.length; i++) {
+        const item = data[i];
+        resultsDiv.innerHTML += `<div class="prediction">• ${item.label} (${(item.score*100).toFixed(2)}%)</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
+
+
