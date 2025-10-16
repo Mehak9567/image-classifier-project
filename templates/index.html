@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <title>Image Classifier</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="manifest" href="/static/manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/service-worker.js');
+  }
+</script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -57,6 +64,8 @@
   <img id="previewImage" src="" alt="Image Preview">
 
   <div id="results"></div>
+  <div id="aiResult"></div>
+
 
   <script>
     function showPreview(event) {
@@ -104,6 +113,24 @@
         resultsDiv.innerHTML += `<div class="prediction">• ${item.label} (${(item.score*100).toFixed(2)}%)</div>`;
       }
     }
+  </script>
+  <script>
+  const data = await response.json();
+
+if (data.error) {
+  document.getElementById("results").innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+  return;
+}
+
+const top = data.classification[0];
+document.getElementById("results").innerHTML =
+  `<div class="prediction top">✅ Top Prediction: ${top.label} (${(top.score*100).toFixed(2)}%)</div>`;
+
+// 🧠 Show AI detection result
+const detect = data.ai_detection[0];
+document.getElementById("aiResult").innerHTML =
+  `<div class="prediction" style="margin-top:15px;">🧩 AI Detection: ${detect.label} (${(detect.score*100).toFixed(2)}%)</div>`;
+
   </script>
 </body>
 </html>
